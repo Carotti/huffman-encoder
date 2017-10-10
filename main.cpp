@@ -21,6 +21,8 @@ int main(int argc, char* argv[])
     bool decode = false;
     bool encode = false;
 
+    int verbosity = 0;
+
     for (int i = 1; i < argc; i++) {
         std::string arg(argv[i]);
         std::map<char, int> short_args;
@@ -44,6 +46,9 @@ int main(int argc, char* argv[])
         } else if (arg == "--encode" || short_args.find('e') != short_args.end()) {
             encode = true;
             short_args.erase('e');
+        } else if (arg == "--verbose" || short_args.find('v') != short_args.end()) {
+            verbosity++;
+            short_args.erase('v');
         } else {
             valid_arg = false;
         }
