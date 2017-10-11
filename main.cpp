@@ -117,9 +117,9 @@ int main(int argc, char* argv[])
     }
 
     if (encode) {
-        huffman::encode(input, output);
+        huffman::encode(input, output, verbosity);
     } else if (decode) {
-        huffman::decode(input, output);
+        huffman::decode(input, output, verbosity);
     } else {
         std::cerr << "Please specify either --encode, -e or --decode, -d" << std::endl;
         exit(EXIT_FAILURE);

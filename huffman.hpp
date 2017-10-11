@@ -62,6 +62,6 @@ namespace huffman {
         bool operator()(const node* lhs, const node* rhs) const;
     };
 
-    void encode(std::string& input, std::string& output);
-    void decode(std::string& input, std::string& output);
+    void encode(std::string& input, std::string& output, int verbosity);
+    void decode(std::string& input, std::string& output, int verbosity);
 }

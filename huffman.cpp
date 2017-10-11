@@ -150,17 +150,23 @@ bool GreaterFrequency::operator()(const node* lhs, const node* rhs) const
     return lhs->get_frequency() > rhs->get_frequency();
 }
 
-void huffman::encode(std::string& input, std::string& output)
+void huffman::encode(std::string& input, std::string& output, int verbosity)
 {
     std::map<char, leaf*> leaves;
 
     for (std::string::const_iterator it = input.begin(); it != input.end(); ++it) {
         if (leaves.find(*it) == leaves.end()) {
             leaves[*it] = new leaf(*it, 1);
+            if (verbosity > 1) {
+                std::cerr << "Created Leaf " << (int)*it << " at ";
+                std::cerr << leaves[*it] << std::endl;
+            }
         } else {
             leaves[*it]->set_frequency(leaves[*it]->get_frequency() + 1);
         }
     }
+
+    if (verbosity > 0) std::cerr << leaves.size() << " leaves created" << std::endl;
 
     std::priority_queue<node*, std::vector<node*>, GreaterFrequency> frequency_list;
 
@@ -181,6 +187,10 @@ void huffman::encode(std::string& input, std::string& output)
         node* right = frequency_list.top();
         frequency_list.pop();
 
+        if (verbosity > 1) {
+            std::cerr << "Combining nodes " << left << " and "  << right << std::endl;
+        }
+
         frequency_list.push(new branch(left, right));
     }
 
@@ -189,7 +199,11 @@ void huffman::encode(std::string& input, std::string& output)
     std::vector<bool> encoding;
 
     tree->encode(encoding);
-    //tree->print();
+
+    if (verbosity > 0) {
+        std::cerr << "Output Huffman tree:" << std::endl;
+        tree->print();
+    }
 
     std::string output_tree;
     tree->tree_encode(output_tree);
@@ -204,7 +218,7 @@ void huffman::encode(std::string& input, std::string& output)
     terminator->output_encode(output, position);
 }
 
-void huffman::decode(std::string& input, std::string& output)
+void huffman::decode(std::string& input, std::string& output, int verbosity)
 {
 
 
