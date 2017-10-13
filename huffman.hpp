@@ -1,5 +1,6 @@
 #include <vector>
 #include <string>
+#include <memory>
 
 namespace huffman {
     class node {
@@ -43,10 +44,10 @@ namespace huffman {
 
     class branch : public node {
     private:
-        node* left; // Left is always the smaller frequency
-        node* right;
+        std::shared_ptr<node> left; // Left is always the smaller frequency
+        std::shared_ptr<node> right;
     public:
-        branch(node* _left, node* _right);
+        branch(std::shared_ptr<node> _left, std::shared_ptr<node> _right);
 
         virtual unsigned get_frequency() const override;
         virtual void print(int depth = -1, bool is_right = false) const override;
@@ -59,9 +60,12 @@ namespace huffman {
     class GreaterFrequency
     {
     public:
-        bool operator()(const node* lhs, const node* rhs) const;
+        bool operator()(const std::shared_ptr<node> lhs, const std::shared_ptr<node> rhs) const;
     };
 
     void encode(std::string& input, std::string& output, int verbosity);
     void decode(std::string& input, std::string& output, int verbosity);
+
+    void match_bracket(const std::string& str, std::string::const_iterator& it);
+
 }
