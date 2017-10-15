@@ -10,6 +10,8 @@ namespace huffman {
         virtual void encode(std::vector<bool>& encoding) = 0;
         virtual void tree_encode(std::string& out) const = 0;
 
+        virtual void ouput_decode(const std::string& input, std::string& output, unsigned& position, std::shared_ptr<node> root);
+
         virtual ~node() = 0;
     private:
 
@@ -63,9 +65,10 @@ namespace huffman {
         bool operator()(const std::shared_ptr<node> lhs, const std::shared_ptr<node> rhs) const;
     };
 
-    void encode(std::string& input, std::string& output, int verbosity);
-    void decode(std::string& input, std::string& output, int verbosity);
+    void encode(const std::string& input, std::string& output, int verbosity);
+    void decode(const std::string& input, std::string& output, int verbosity);
 
     void match_bracket(const std::string& str, std::string::const_iterator& it);
+    std::shared_ptr<node> tree_from_str(const std::string& str);
 
 }

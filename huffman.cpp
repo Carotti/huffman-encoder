@@ -149,7 +149,7 @@ bool GreaterFrequency::operator()(const std::shared_ptr<node> lhs, const std::sh
     return lhs->get_frequency() > rhs->get_frequency();
 }
 
-void huffman::encode(std::string& input, std::string& output, int verbosity)
+void huffman::encode(const std::string& input, std::string& output, int verbosity)
 {
     std::map<char, std::shared_ptr<leaf>> leaves;
 
@@ -221,26 +221,95 @@ void huffman::encode(std::string& input, std::string& output, int verbosity)
     terminator->output_encode(output, position);
 }
 
-void huffman::decode(std::string& input, std::string& output, int verbosity)
+void huffman::decode(const std::string& input, std::string& output, int verbosity)
 {
     // Match input bracket, to determine where the string ends
     if (input.front() != '(') {
-        std::cout << "Invalid input file" << std::endl;
+        std::cerr << "Invalid input file" << std::endl;
         exit(EXIT_FAILURE);
     }
 
+    std::string::const_iterator divider = input.begin();
+    match_bracket(input, divider);
 
+    if (divider == input.end()) {
+        std::cerr << "Invalid input file" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    // divider now points to the last bracket in the tree representation
+    std::string tree_str(input.begin(), std::next(divider));
+
+    std::shared_ptr<node> tree = tree_from_str(tree_str);
+
+    std::vector<bool> encoding;
+    tree->encode(encoding);
+
+    tree->print();
 }
 
 // if it == str.end() then the bracket could not be matched
+// it should point to the bracket from which to start searching
 void huffman::match_bracket(const std::string& str, std::string::const_iterator& it) {
     int depth = 1;
-    while (depth != 0 && std::next(it) != str.end()) {
+    bool escaped = false;
+    while (depth != 0 && it != str.end()) {
         it++;
-        if (*it == '(' && *std::prev(it) != '\\') {
-            depth++;
-        } else if (*it == ')' && *std::prev(it) != '\\') {
+        if (*it == '(' && !escaped) {
             depth++;
         }
+        if (*it == ')' && !escaped) {
+            depth--;
+        }
+
+        if (*it == '\\') {
+            escaped = !escaped;
+        } else {
+            escaped = false;
+        }
     }
+}
+
+std::shared_ptr<node> huffman::tree_from_str(const std::string& str)
+{
+    std::cerr << std::endl;
+    std::cerr << str << std::endl;
+    std::string::const_iterator divider = str.begin();
+
+    bool enclosed = false;
+
+    if (*divider == '(') {
+        // Left hand side starts with a bracket
+        match_bracket(str, divider);
+
+        if (divider == std::prev(str.end())) {
+            // Remove enclosing brackets
+            return tree_from_str(std::string(std::next(str.begin()), std::prev(str.end())));
+        }
+    } else {
+        // Left hand size starts with a character
+        if (*divider == '\\') {
+            divider++;
+        }
+    }
+
+    if (divider == std::prev(str.end())) {
+        // This is not a branch but a single character
+        if (*divider == 'e' && *std::prev(divider) == '\\') {
+            std::cerr << "eof" << std::endl;
+            return std::make_shared<eof>();
+        }
+        return std::make_shared<leaf>(*divider, 1);
+    }
+
+    // divider now points to the last character in the left hand size of the
+    // string representation of the tree
+
+    const std::string& l_str = std::string(str.begin(), std::next(divider));
+    const std::string& r_str = std::string(std::next(divider), str.end());
+
+    std::shared_ptr<node> left = tree_from_str(l_str);
+    std::shared_ptr<node> right = tree_from_str(r_str);
+
+    return std::make_shared<branch>(left, right);
 }
