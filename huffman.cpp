@@ -95,6 +95,19 @@ void leaf::tree_encode(std::string& out) const
     }
 }
 
+void leaf::output_decode(const std::string& input,
+    std::string::iterator it, std::string& output, unsigned position,
+    const std::shared_ptr<node>& root) const
+{
+    if (frequency != 0) {
+        // Not the end of file character
+        output.push_back(character);
+
+        // Keep consuming bits from the top of the tree
+        root->output_decode(input, it, output, position, root);
+    }
+}
+
 eof::eof() : leaf(0, 0)
 {
 
@@ -142,6 +155,32 @@ void branch::tree_encode(std::string& out) const
     left->tree_encode(out);
     right->tree_encode(out);
     out.push_back(')');
+}
+
+void branch::output_decode(const std::string& input,
+    std::string::iterator it, std::string& output, unsigned position,
+    const std::shared_ptr<node>& root) const
+{
+    // left is for a 0, right is for a 1
+    char current = *it;
+
+    if (it == input.end()) {
+        std::cerr << "Input terminated before a valid eof character" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+
+    char bit = current & (0x80 >> position);
+
+    if (++position == 8) {
+        position = 0;
+        ++it;
+    }
+
+    if (bit == (char)0) {
+        left->output_decode(input, it, output, position, root);
+    } else {
+        right->output_decode(input, it, output, position, root);
+    }
 }
 
 bool GreaterFrequency::operator()(const std::shared_ptr<node> lhs, const std::shared_ptr<node> rhs) const
@@ -239,13 +278,19 @@ void huffman::decode(const std::string& input, std::string& output, int verbosit
 
     // divider now points to the last bracket in the tree representation
     std::string tree_str(input.begin(), std::next(divider));
+    std::string input_str(std::next(divider), input.end());
 
     std::shared_ptr<node> tree = tree_from_str(tree_str);
 
     std::vector<bool> encoding;
     tree->encode(encoding);
 
-    tree->print();
+    if (verbosity > 0) {
+        std::cerr << "Using input tree:" << std::endl;
+        tree->print();
+    }
+
+    tree->output_decode(input_str, input_str.begin(), output, 0, tree);
 }
 
 // if it == str.end() then the bracket could not be matched

@@ -10,7 +10,9 @@ namespace huffman {
         virtual void encode(std::vector<bool>& encoding) = 0;
         virtual void tree_encode(std::string& out) const = 0;
 
-        virtual void ouput_decode(const std::string& input, std::string& output, unsigned& position, std::shared_ptr<node> root);
+        virtual void output_decode(const std::string& input,
+            std::string::iterator it, std::string& output, unsigned position,
+            const std::shared_ptr<node>& root) const = 0;
 
         virtual ~node() = 0;
     private:
@@ -33,6 +35,10 @@ namespace huffman {
 
         void set_frequency(unsigned _frequency);
         void output_encode(std::string& str, unsigned& position);
+
+        virtual void output_decode(const std::string& input,
+            std::string::iterator it, std::string& output, unsigned position,
+            const std::shared_ptr<node>& root) const override;
     };
 
     // A leaf node with no character, represents the end of the file
@@ -57,12 +63,17 @@ namespace huffman {
         virtual void tree_encode(std::string& out) const override;
 
         ~branch();
+
+        virtual void output_decode(const std::string& input,
+            std::string::iterator it, std::string& output, unsigned position,
+            const std::shared_ptr<node>& root) const override;
     };
 
     class GreaterFrequency
     {
     public:
-        bool operator()(const std::shared_ptr<node> lhs, const std::shared_ptr<node> rhs) const;
+        bool operator()(const std::shared_ptr<node> lhs,
+            const std::shared_ptr<node> rhs) const;
     };
 
     void encode(const std::string& input, std::string& output, int verbosity);
